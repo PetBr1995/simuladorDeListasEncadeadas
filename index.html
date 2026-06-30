@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Listas Encadeadas</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ===================== MENU INICIAL ===================== -->
+<section id="home" class="view">
+  <div class="hero">
+    <h1>🚂 Simulador de <span>Listas Encadeadas</span></h1>
+    <p class="sub">Escolha uma lista para abrir o simulador. Você vai poder <b>percorrer</b>,
+       <b>inserir</b> e <b>remover</b> elementos vendo o <b>código Go rodar passo a passo</b>
+       e o que acontece com a lista.</p>
+  </div>
+
+  <div class="cards">
+    <button class="card" data-go="singly">
+      <div class="ico">➡️</div>
+      <h2>Simplesmente encadeada</h2>
+      <p>Mão única: cada vagão só conhece o próximo. O último aponta para <code>NULL</code>.</p>
+      <span class="enter">Abrir simulador →</span>
+    </button>
+    <button class="card" data-go="doubly">
+      <div class="ico">↔️</div>
+      <h2>Duplamente encadeada</h2>
+      <p>Engate dos dois lados: dá para andar para frente (<code>next</code>) e para trás (<code>prev</code>).</p>
+      <span class="enter">Abrir simulador →</span>
+    </button>
+    <button class="card" data-go="circular">
+      <div class="ico">🔁</div>
+      <h2>Circular</h2>
+      <p>Um carrossel: o último vagão se engata de volta no primeiro. Não há <code>NULL</code>.</p>
+      <span class="enter">Abrir simulador →</span>
+    </button>
+  </div>
+  <footer>Aprender brincando. Abra o <code>index.html</code> e divirta-se. 🎈</footer>
+</section>
+
+<!-- ===================== SIMULADOR ===================== -->
+<section id="sim" class="view hidden">
+  <div class="topbar">
+    <button id="back" class="ghost">← Menu</button>
+    <h1 id="simTitle">Lista</h1>
+  </div>
+
+  <div class="analogy" id="analogy"></div>
+
+  <div class="controls">
+    <div class="group">
+      <label>Valor</label><input type="number" id="value" value="10">
+    </div>
+    <div class="group">
+      <button class="primary" data-op="insertHead">Inserir início</button>
+      <button class="primary" data-op="insertTail">Inserir fim</button>
+      <label>na pos.</label><input type="number" id="pos" value="1">
+      <button data-op="insertAt">Inserir aqui</button>
+    </div>
+    <div class="group">
+      <button data-op="removeHead">Remover início</button>
+      <button data-op="removeTail">Remover fim</button>
+      <button data-op="removeValue">Remover valor</button>
+    </div>
+    <div class="group">
+      <button class="accent" data-op="search">🔍 Buscar</button>
+      <button class="accent" data-op="traverse">👣 Percorrer</button>
+      <button class="danger" data-op="clear">🧹 Limpar</button>
+    </div>
+  </div>
+
+  <!-- Lista (esquerda) + código passo a passo (direita) -->
+  <div class="workspace">
+    <div class="viz">
+      <h3 class="panel-title">📦 A lista</h3>
+      <div class="stage" id="stage"></div>
+      <div class="meta" id="meta">Tamanho: 0</div>
+    </div>
+
+    <div class="runner">
+      <h3 class="panel-title">🧑‍💻 O código rodando</h3>
+      <div class="narration" id="narration">Escolha uma operação para ver o código rodar passo a passo.</div>
+      <div class="stepbar">
+        <button id="btnRestart" class="step">⏮ Reiniciar</button>
+        <button id="btnPrev" class="step">◀ Anterior</button>
+        <button id="btnPlay" class="step play">▶ Play</button>
+        <button id="btnNext" class="step">Próximo ▶</button>
+        <span class="progress" id="progress">—</span>
+      </div>
+      <div class="spd">Velocidade
+        <input type="range" id="speed" min="250" max="1600" value="850" step="50">
+      </div>
+      <pre class="code" id="code"></pre>
+    </div>
+  </div>
+
+  <div class="legend" id="legend"></div>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
