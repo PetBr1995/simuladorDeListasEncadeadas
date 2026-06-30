@@ -242,29 +242,29 @@ function mk(line,msg,values,cur,mark){ return {line,msg,values,cur:cur??-1,mark:
 function genSearch(type, arr, v){
   const circular = type==="circular";
   const code = circular ? [
-    "func (l *ListaCircular) Buscar(v int) int {",
-    "    atual := l.cauda.proximo       // cabeça",
-    "    for i := 0; i < l.tamanho; i++ {",
-    "        if atual.valor == v {",
-    "            return i",
-    "        }",
-    "        atual = atual.proximo",
-    "    }",
-    "    return -1",
-    "}"
+    "func (l *ListaCircular) Buscar(v int) int {",   // procura v e devolve sua posição
+    "    atual := l.cauda.proximo       // começa na cabeça (cauda.proximo)",
+    "    for i := 0; i < l.tamanho; i++ {",           // dá no máximo uma volta completa
+    "        if atual.valor == v {",                  // o vagão atual tem o valor?
+    "            return i",                            // sim: devolve a posição i
+    "        }",                                       // fim do if
+    "        atual = atual.proximo",                  // não: avança para o próximo
+    "    }",                                           // fim do laço (deu a volta toda)
+    "    return -1",                                   // não encontrou
+    "}"                                                // fim da função
   ] : [
-    "func Buscar(v int) int {",
-    "    atual := cabeca",
-    "    i := 0",
-    "    for atual != nil {",
-    "        if atual.valor == v {",
-    "            return i",
-    "        }",
-    "        atual = atual.proximo",
-    "        i++",
-    "    }",
-    "    return -1",
-    "}"
+    "func Buscar(v int) int {",            // procura v e devolve sua posição
+    "    atual := cabeca",                 // começa no primeiro nó (cabeça)
+    "    i := 0",                          // contador de posição
+    "    for atual != nil {",              // enquanto houver vagão
+    "        if atual.valor == v {",       // o vagão atual tem o valor?
+    "            return i",                // sim: devolve a posição i
+    "        }",                           // fim do if
+    "        atual = atual.proximo",       // avança para o próximo
+    "        i++",                         // soma 1 na posição
+    "    }",                               // fim do laço
+    "    return -1",                       // percorreu tudo: não achou
+    "}"                                    // fim da função
   ];
   const last = code.length-2;
   const forL = circular?2:3, ifL = circular?3:4, retOk = circular?4:5, advL = circular?6:7;
@@ -287,21 +287,21 @@ function genSearch(type, arr, v){
 function genTraverse(type, arr){
   const circular = type==="circular";
   const code = circular ? [
-    "func (l *ListaCircular) Percorrer() {",
-    "    atual := l.cauda.proximo",
-    "    for i := 0; i < l.tamanho; i++ {",
-    "        visita(atual.valor)",
-    "        atual = atual.proximo",
-    "    }",
-    "}"
+    "func (l *ListaCircular) Percorrer() {",  // visita todos os vagões uma vez
+    "    atual := l.cauda.proximo",           // começa na cabeça
+    "    for i := 0; i < l.tamanho; i++ {",   // dá exatamente 'tamanho' passos
+    "        visita(atual.valor)",            // usa o valor do vagão atual
+    "        atual = atual.proximo",          // avança para o próximo
+    "    }",                                  // fim do laço
+    "}"                                       // fim da função
   ] : [
-    "func Percorrer() {",
-    "    atual := cabeca",
-    "    for atual != nil {",
-    "        visita(atual.valor)",
-    "        atual = atual.proximo",
-    "    }",
-    "}"
+    "func Percorrer() {",                // visita todos os vagões
+    "    atual := cabeca",              // começa na cabeça
+    "    for atual != nil {",           // enquanto não chegar ao fim (nil)
+    "        visita(atual.valor)",      // usa o valor do vagão atual
+    "        atual = atual.proximo",    // avança para o próximo
+    "    }",                            // fim do laço
+    "}"                                 // fim da função
   ];
   const st=[];
   if(arr.length===0){ st.push(mk(1,"Lista vazia — nada para percorrer.",arr,-1)); return {code,steps:st,final:arr}; }
@@ -320,16 +320,29 @@ function genInsertHead(type, arr, v){
   const final=[v,...arr], st=[];
   let code;
   if(type==="doubly"){
-    code=["func (l *ListaDupla) InserirInicio(v int) {","    novo := &No{valor: v, proximo: l.cabeca}","    if l.cabeca != nil { l.cabeca.anterior = novo } else { l.cauda = novo }","    l.cabeca = novo","}"];
+    code=["func (l *ListaDupla) InserirInicio(v int) {",   // insere v no começo
+          "    novo := &No{valor: v, proximo: l.cabeca}",   // novo aponta para a antiga cabeça
+          "    if l.cabeca != nil { l.cabeca.anterior = novo } else { l.cauda = novo }",  // liga o 'anterior' da antiga cabeça (ou vira cauda se vazia)
+          "    l.cabeca = novo",                            // novo passa a ser a cabeça
+          "}"];                                             // fim da função
     st.push(mk(1,`Cria o vagão <b>${v}</b>; seu <b>proximo</b> aponta para a antiga cabeça.`,arr,-1));
     st.push(mk(2,"A antiga cabeça passa a ter <b>anterior</b> = novo vagão.",arr,-1));
     st.push(mk(3,`<b>cabeca</b> agora é o vagão ${v}. (O(1))`,final,0,0));
   } else if(type==="circular"){
-    code=["func (l *ListaCircular) InserirInicio(v int) {","    novo := &No{valor: v}","    if l.cauda == nil { novo.proximo = novo; l.cauda = novo; return }","    novo.proximo = l.cauda.proximo   // novo -> antiga cabeça","    l.cauda.proximo = novo           // cauda -> novo (vira cabeça)","}"];
+    code=["func (l *ListaCircular) InserirInicio(v int) {",  // insere v no começo
+          "    novo := &No{valor: v}",                        // cria o novo nó
+          "    if l.cauda == nil { novo.proximo = novo; l.cauda = novo; return }",  // lista vazia: aponta para si mesmo
+          "    novo.proximo = l.cauda.proximo   // novo -> antiga cabeça",
+          "    l.cauda.proximo = novo           // cauda -> novo (vira cabeça)",
+          "}"];                                               // fim da função
     if(arr.length===0){ st.push(mk(2,`Lista vazia: ${v} aponta para si mesmo e vira cauda/cabeça.`,final,0,0)); }
     else { st.push(mk(1,`Cria o vagão <b>${v}</b>.`,arr,-1)); st.push(mk(3,"proximo do novo aponta para a antiga cabeça.",arr,-1)); st.push(mk(4,`A cauda aponta para ${v} — ele é a nova cabeça.`,final,0,0)); }
   } else {
-    code=["func InserirInicio(v int) {","    novo := &No{valor: v}","    novo.proximo = cabeca","    cabeca = novo","}"];
+    code=["func InserirInicio(v int) {",   // insere v no começo
+          "    novo := &No{valor: v}",      // cria o novo nó
+          "    novo.proximo = cabeca",      // novo aponta para a antiga cabeça
+          "    cabeca = novo",              // novo passa a ser a cabeça
+          "}"];                             // fim da função
     st.push(mk(1,`Cria o vagão <b>${v}</b>.`,arr,-1));
     st.push(mk(2,"<b>proximo</b> do novo vagão aponta para a antiga cabeça.",arr,-1));
     st.push(mk(3,`<b>cabeca</b> agora é o vagão ${v}. (O(1))`,final,0,0));
@@ -342,15 +355,33 @@ function genInsertTail(type, arr, v){
   const final=[...arr,v], st=[], lastIdx=arr.length-1;
   let code;
   if(type==="doubly"){
-    code=["func (l *ListaDupla) InserirFim(v int) {","    novo := &No{valor: v, anterior: l.cauda}","    if l.cauda != nil { l.cauda.proximo = novo } else { l.cabeca = novo }","    l.cauda = novo","}"];
+    code=["func (l *ListaDupla) InserirFim(v int) {",   // insere v no fim
+          "    novo := &No{valor: v, anterior: l.cauda}", // novo aponta para trás (antiga cauda)
+          "    if l.cauda != nil { l.cauda.proximo = novo } else { l.cabeca = novo }",  // liga a antiga cauda ao novo (ou vira cabeça se vazia)
+          "    l.cauda = novo",                          // novo passa a ser a cauda
+          "}"];                                          // fim da função
     if(arr.length===0){ st.push(mk(2,`Lista vazia: ${v} vira cabeca e cauda.`,final,0,0)); }
     else { st.push(mk(1,`Cria o vagão <b>${v}</b>; <b>anterior</b> aponta para a antiga cauda.`,arr,lastIdx)); st.push(mk(2,"A antiga cauda passa a ter <b>proximo</b> = novo vagão.",arr,lastIdx)); st.push(mk(3,`<b>cauda</b> agora é ${v}. (O(1) — graças ao ponteiro cauda!)`,final,final.length-1,final.length-1)); }
   } else if(type==="circular"){
-    code=["func (l *ListaCircular) InserirFim(v int) {","    novo := &No{valor: v}","    if l.cauda == nil { novo.proximo = novo; l.cauda = novo; return }","    novo.proximo = l.cauda.proximo   // -> cabeça","    l.cauda.proximo = novo           // antiga cauda -> novo","    l.cauda = novo                   // novo vira a cauda","}"];
+    code=["func (l *ListaCircular) InserirFim(v int) {",  // insere v no fim
+          "    novo := &No{valor: v}",                     // cria o novo nó
+          "    if l.cauda == nil { novo.proximo = novo; l.cauda = novo; return }",  // lista vazia: aponta para si mesmo
+          "    novo.proximo = l.cauda.proximo   // novo -> cabeça (mantém o anel)",
+          "    l.cauda.proximo = novo           // antiga cauda -> novo",
+          "    l.cauda = novo                   // novo vira a cauda",
+          "}"];                                            // fim da função
     if(arr.length===0){ st.push(mk(2,`Lista vazia: ${v} aponta para si mesmo.`,final,0,0)); }
     else { st.push(mk(1,`Cria o vagão <b>${v}</b>.`,arr,lastIdx)); st.push(mk(3,"proximo do novo aponta para a cabeça (mantém o anel).",arr,lastIdx)); st.push(mk(4,"A antiga cauda aponta para o novo.",arr,lastIdx)); st.push(mk(5,`${v} vira a nova cauda. (O(1))`,final,final.length-1,final.length-1)); }
   } else {
-    code=["func InserirFim(v int) {","    novo := &No{valor: v}","    if cabeca == nil { cabeca = novo; return }","    atual := cabeca","    for atual.proximo != nil {","        atual = atual.proximo","    }","    atual.proximo = novo","}"];
+    code=["func InserirFim(v int) {",                    // insere v no fim
+          "    novo := &No{valor: v}",                    // cria o novo nó
+          "    if cabeca == nil { cabeca = novo; return }", // lista vazia: novo vira a cabeça
+          "    atual := cabeca",                          // começa na cabeça
+          "    for atual.proximo != nil {",               // anda até o último vagão
+          "        atual = atual.proximo",                // avança
+          "    }",                                        // fim do laço
+          "    atual.proximo = novo",                     // liga o último ao novo
+          "}"];                                           // fim da função
     if(arr.length===0){ st.push(mk(2,`Lista vazia: ${v} vira a cabeça.`,final,0,0)); }
     else {
       st.push(mk(1,`Cria o vagão <b>${v}</b>.`,arr,-1));
@@ -369,7 +400,15 @@ function genInsertAt(type, arr, v, pos){
   if(pos===0) return genInsertHead(type,arr,v);
   if(pos===arr.length) return genInsertTail(type,arr,v);
   const final=arr.slice(0,pos).concat(v, arr.slice(pos)), st=[];
-  const code=["func InserirEm(pos, v int) {","    atual := cabeca","    for i := 0; i < pos-1; i++ {","        atual = atual.proximo","    }","    novo := &No{valor: v}","    novo.proximo = atual.proximo   // novo -> sucessor","    atual.proximo = novo           // anterior -> novo","}"];
+  const code=["func InserirEm(pos, v int) {",            // insere v na posição pos
+              "    atual := cabeca",                      // começa na cabeça
+              "    for i := 0; i < pos-1; i++ {",         // anda até o nó ANTERIOR à posição
+              "        atual = atual.proximo",            // avança
+              "    }",                                    // fim do laço
+              "    novo := &No{valor: v}",                // cria o novo nó
+              "    novo.proximo = atual.proximo   // novo -> sucessor",
+              "    atual.proximo = novo           // anterior -> novo",
+              "}"];                                       // fim da função
   st.push(mk(1,"<b>atual</b> começa na cabeça.",arr,0));
   for(let i=0;i<pos-1;i++){ st.push(mk(2,`Avança até a posição ${pos-1}. (i = ${i})`,arr,i)); st.push(mk(3,"atual = atual.proximo",arr,i+1)); }
   st.push(mk(5,`Cria o vagão <b>${v}</b>.`,arr,pos-1));
@@ -383,7 +422,10 @@ function genRemoveEnd(type, arr, head){
   if(arr.length===0) return {code:STRUCT[type],steps:[mk(0,`❌ ${ERR_VAZIA}`,arr,-1)],final:arr};
   if(head){
     const final=arr.slice(1);
-    const code=["func RemoverInicio() {","    if cabeca == nil { return }","    cabeca = cabeca.proximo   // descarta o 1º vagão","}"];
+    const code=["func RemoverInicio() {",            // remove o primeiro vagão
+                "    if cabeca == nil { return }",    // lista vazia: nada a fazer
+                "    cabeca = cabeca.proximo   // cabeça passa a ser o 2º vagão",
+                "}"];                                 // fim da função
     return {code,steps:[
       mk(1,"cabeca == nil? Não, há vagões.",arr,0),
       mk(2,`A cabeça (<b>${arr[0]}</b>) sai; <b>cabeca</b> passa a ser o 2º vagão.`,arr,0,0),
@@ -392,14 +434,25 @@ function genRemoveEnd(type, arr, head){
   }
   const final=arr.slice(0,-1);
   if(type==="doubly"){
-    const code=["func (l *ListaDupla) RemoverFim() {","    if l.cauda == nil { return }","    l.cauda = l.cauda.anterior","    if l.cauda != nil { l.cauda.proximo = nil } else { l.cabeca = nil }","}"];
+    const code=["func (l *ListaDupla) RemoverFim() {",  // remove o último vagão
+                "    if l.cauda == nil { return }",      // lista vazia: nada a fazer
+                "    l.cauda = l.cauda.anterior",        // cauda recua para o penúltimo
+                "    if l.cauda != nil { l.cauda.proximo = nil } else { l.cabeca = nil }",  // corta o elo final (ou esvazia)
+                "}"];                                    // fim da função
     return {code,steps:[
       mk(2,`Usa o ponteiro <b>cauda</b> e seu <b>anterior</b> — não precisa andar! (O(1))`,arr,arr.length-1,arr.length-1),
       mk(3,"cauda volta um vagão (para o anterior).",arr,arr.length-2<0?-1:arr.length-2),
       mk(3,"Removido o último! ✂️",final,-1)
     ],final};
   }
-  const code=["func RemoverFim() {","    if cabeca.proximo == nil { cabeca = nil; return }","    atual := cabeca","    for atual.proximo.proximo != nil {","        atual = atual.proximo","    }","    atual.proximo = nil   // descarta o último","}"];
+  const code=["func RemoverFim() {",                            // remove o último vagão
+              "    if cabeca.proximo == nil { cabeca = nil; return }", // só um vagão: lista fica vazia
+              "    atual := cabeca",                            // começa na cabeça
+              "    for atual.proximo.proximo != nil {",         // anda até o penúltimo
+              "        atual = atual.proximo",                  // avança
+              "    }",                                          // fim do laço
+              "    atual.proximo = nil   // solta o último (vira o novo fim)",
+              "}"];                                             // fim da função
   const st=[];
   if(arr.length===1){ st.push(mk(1,`Só há um vagão — a lista fica vazia.`,arr,0,0)); st.push(mk(1,"Removido! ✂️",final,-1)); return {code,steps:st,final}; }
   st.push(mk(2,"<b>atual</b> começa na cabeça.",arr,0));
@@ -414,7 +467,16 @@ function genRemoveValue(type, arr, v){
   const idx = arr.indexOf(v);
   const st=[];
   if(type==="doubly"){
-    const code=["func (l *ListaDupla) RemoverValor(v int) {","    atual := l.cabeca","    for atual != nil && atual.valor != v {","        atual = atual.proximo","    }","    if atual == nil { return }   // não achou","    // religa os vizinhos nos dois sentidos:","    atual.anterior.proximo = atual.proximo","    atual.proximo.anterior = atual.anterior","}"];
+    const code=["func (l *ListaDupla) RemoverValor(v int) {",  // remove o vagão de valor v
+                "    atual := l.cabeca",                        // começa na cabeça
+                "    for atual != nil && atual.valor != v {",   // procura o valor
+                "        atual = atual.proximo",                // avança
+                "    }",                                        // fim do laço
+                "    if atual == nil { return }   // não achou",
+                "    // religa os vizinhos nos dois sentidos:",
+                "    atual.anterior.proximo = atual.proximo",   // anterior aponta para o sucessor
+                "    atual.proximo.anterior = atual.anterior",  // sucessor aponta para o anterior
+                "}"];                                           // fim da função
     if(arr.length===0){ return {code,steps:[mk(1,`❌ ${ERR_VAZIA}`,arr,-1)],final:arr}; }
     st.push(mk(1,"<b>atual</b> começa na cabeça.",arr,0));
     for(let i=0;i<arr.length;i++){
@@ -429,7 +491,16 @@ function genRemoveValue(type, arr, v){
     return {code,steps:st,final};
   }
   if(type==="circular"){
-    const code=["func (l *ListaCircular) RemoverValor(v int) {","    atual := l.cauda.proximo     // cabeça","    for k := 0; k < l.tamanho; k++ {","        if atual.valor == v {","            // religa o anterior ao próximo de atual","            l.tamanho--; return","        }","        atual = atual.proximo","    }","}"];
+    const code=["func (l *ListaCircular) RemoverValor(v int) {",  // remove o vagão de valor v
+                "    atual := l.cauda.proximo     // começa na cabeça",
+                "    for k := 0; k < l.tamanho; k++ {",            // dá no máximo uma volta
+                "        if atual.valor == v {",                   // achou o valor?
+                "            // religa o anterior ao próximo de atual",
+                "            l.tamanho--; return",                  // remove e sai
+                "        }",                                       // fim do if
+                "        atual = atual.proximo",                   // avança
+                "    }",                                           // fim do laço
+                "}"];                                              // fim da função
     if(arr.length===0){ return {code,steps:[mk(1,`❌ ${ERR_VAZIA}`,arr,-1)],final:arr}; }
     st.push(mk(1,"<b>atual</b> começa na cabeça.",arr,0));
     for(let i=0;i<arr.length;i++){
@@ -445,7 +516,16 @@ function genRemoveValue(type, arr, v){
     return {code,steps:st.concat(mk(2,`Deu a volta inteira sem achar <b>${v}</b>.`,arr,-1)),final:arr};
   }
   // singly
-  const code=["func RemoverValor(v int) {","    if cabeca == nil { return }","    if cabeca.valor == v { cabeca = cabeca.proximo; return }","    atual := cabeca","    for atual.proximo != nil && atual.proximo.valor != v {","        atual = atual.proximo","    }","    if atual.proximo == nil { return }   // não achou","    atual.proximo = atual.proximo.proximo  // pula o vagão","}"];
+  const code=["func RemoverValor(v int) {",                    // remove o vagão de valor v
+              "    if cabeca == nil { return }",                // lista vazia: nada a fazer
+              "    if cabeca.valor == v { cabeca = cabeca.proximo; return }", // é a cabeça? remove direto
+              "    atual := cabeca",                            // começa na cabeça
+              "    for atual.proximo != nil && atual.proximo.valor != v {",  // procura o vagão ANTES do alvo
+              "        atual = atual.proximo",                  // avança
+              "    }",                                          // fim do laço
+              "    if atual.proximo == nil { return }   // não achou",
+              "    atual.proximo = atual.proximo.proximo  // pula o vagão alvo",
+              "}"];                                             // fim da função
   if(arr.length===0){ return {code,steps:[mk(1,`❌ cabeca == nil — ${ERR_VAZIA}`,arr,-1)],final:arr}; }
   if(arr[0]===v){ const final=arr.slice(1);
     st.push(mk(2,`cabeca.valor == ${v}? <b>Sim</b> — a cabeça sai.`,arr,0,0));
@@ -479,9 +559,9 @@ const LEGEND={
   circular:`<b>Legenda:</b> seta curva azul = <code>cauda → cabeça</code> (o anel) · sem <code>nil</code> · ponteiro vermelho <b>atual</b> mostra onde o código está.`
 };
 const STRUCT={
-  singly:["// Estrutura — lista simplesmente encadeada","type No struct {","    valor    int","    proximo *No   // só aponta para frente","}","","// cabeca guarda o primeiro nó; o último proximo é nil.","// ▶ Escolha uma operação acima para ver o código rodar."],
-  doubly:["// Estrutura — lista duplamente encadeada","type No struct {","    valor             int","    anterior, proximo *No   // aponta para os dois lados","}","","// cabeca e cauda nas pontas tornam as bordas O(1).","// ▶ Escolha uma operação acima para ver o código rodar."],
-  circular:["// Estrutura — lista circular","type No struct {","    valor    int","    proximo *No","}","","// Guardamos só a cauda; a cabeça é cauda.proximo.","// O proximo do último volta para a cabeça (anel).","// ▶ Escolha uma operação acima para ver o código rodar."]
+  singly:["// Estrutura — lista simplesmente encadeada","type No struct {        // molde de um vagão","    valor    int        // o dado guardado","    proximo *No         // ponteiro para o próximo nó","}","","// cabeca guarda o primeiro nó; o último proximo é nil.","// ▶ Escolha uma operação acima para ver o código rodar."],
+  doubly:["// Estrutura — lista duplamente encadeada","type No struct {                // molde de um vagão","    valor             int        // o dado guardado","    anterior, proximo *No        // ponteiros para os dois vizinhos","}","","// cabeca e cauda nas pontas tornam as bordas O(1).","// ▶ Escolha uma operação acima para ver o código rodar."],
+  circular:["// Estrutura — lista circular","type No struct {        // molde de um vagão","    valor    int        // o dado guardado","    proximo *No         // próximo nó (o último volta à cabeça)","}","","// Guardamos só a cauda; a cabeça é cauda.proximo.","// O proximo do último volta para a cabeça (anel).","// ▶ Escolha uma operação acima para ver o código rodar."]
 };
 
 /* ===========================================================================
